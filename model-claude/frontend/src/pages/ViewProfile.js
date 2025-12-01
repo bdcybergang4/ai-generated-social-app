@@ -4,7 +4,7 @@ import { AuthContext } from '../utils/AuthContext';
 import apiClient from '../utils/apiClient';
 import { formatDate, sanitizeHtml } from '../utils/helpers';
 
-const ViewProfile = () => {
+const ViewProfile = ({ isOwnProfile = false }) => {
   const { userId } = useParams();
   const { user: currentUser } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
@@ -16,10 +16,19 @@ const ViewProfile = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const profileResponse = await apiClient.get(`/users/${userId}`);
+        
+        // Fetch current user's profile if isOwnProfile, otherwise fetch specific user
+        let profileResponse;
+        if (isOwnProfile) {
+          profileResponse = await apiClient.get('/users/me');
+        } else {
+          profileResponse = await apiClient.get(`/users/${userId}`);
+        }
         setProfile(profileResponse.data.data);
 
-        const postsResponse = await apiClient.get(`/posts/user/${userId}`);
+        // Fetch posts - use the profile's ID
+        const targetUserId = isOwnProfile ? profileResponse.data.data._id : userId;
+        const postsResponse = await apiClient.get(`/posts/user/${targetUserId}`);
         setPosts(postsResponse.data.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Error loading profile');
@@ -29,7 +38,7 @@ const ViewProfile = () => {
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [userId, isOwnProfile]);
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;

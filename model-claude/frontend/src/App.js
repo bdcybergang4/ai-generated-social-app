@@ -30,7 +30,7 @@ const App = () => {
             path="/profile"
             element={
               <ProtectedRoute>
-                <ViewProfile userId={localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).id : ''} />
+                <ViewProfile isOwnProfile={true} />
               </ProtectedRoute>
             }
           />
